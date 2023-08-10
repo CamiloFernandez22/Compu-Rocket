@@ -1,0 +1,26 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+//Aqui nos vamos a conectar a nuestra base de datos generada 
+//y gestionada por medio de un API de Prisma.io usando Planetscale
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  //Aqui el enlace de ruta para la conexion a la base de datos se jala del doc .env
+  // y es el mismo enlace que proporciona Planetscale 
+  url      = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+//Se va a crear lo que seria una tabla de creacion de tienda
+
+model Store{
+  id        String    @id @default(uuid()) //Se indica la llave primaria
+  name      String   
+  userId    String
+  createdAt DateTime  @default(now()) //Aqui estamos indicando que el valor de creacion de instancia es inmediato en la configuracion de tiempo del sistema. 
+  updatedAt DateTime  @updatedAt  
+}
