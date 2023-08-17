@@ -1,4 +1,4 @@
-//Aqui utilizamos use client porque Modal es un componente de cliente
+//Aqui utilizamos use client porque Modal Provider es un componente de cliente
 "use client";
 
 import { StoreModal } from "@/components/modals/store-modal";
