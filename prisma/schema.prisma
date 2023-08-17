@@ -3,6 +3,11 @@
 
 //Aqui nos vamos a conectar a nuestra base de datos generada 
 //y gestionada por medio de un API de Prisma.io usando Planetscale
+
+//==============================================================================================================
+//******* IMPORTANTE ****** para actualizar la base de datos se necesita correr el comando "npx prisma generate"
+//Para hacer push al controlador de versiones de la base de datos PlanetScale se necesita correr
+// el comando "npx prisma db push".
 generator client {
   provider = "prisma-client-js"
 }
@@ -18,9 +23,114 @@ datasource db {
 //Se va a crear lo que seria una tabla de creacion de tienda
 
 model Store{
-  id        String    @id @default(uuid()) //Se indica la llave primaria
-  name      String   
-  userId    String
-  createdAt DateTime  @default(now()) //Aqui estamos indicando que el valor de creacion de instancia es inmediato en la configuracion de tiempo del sistema. 
-  updatedAt DateTime  @updatedAt  
+  id          String    @id @default(uuid()) //Se indica la llave primaria
+  name        String   
+  userId      String
+  billboards  Billboard[]   @relation("StoreToBillboard")     //Relacion con la FK
+  categories  Category[]    @relation("StoreToCategory")      //Relacion con la FK
+  sizes       Size[]        @relation("StoreToSize")          //Relacion con la FK
+  products     Product[]    @relation("StoreToProduct")      //Relacion con la FK
+  colors       Color[]      @relation("StoreToColor")       //Relacion con la FK   
+  createdAt   DateTime      @default(now()) //Aqui estamos indicando que el valor de creacion de instancia es inmediato en la configuracion de tiempo del sistema. 
+  updatedAt   DateTime      @updatedAt  
+}
+
+//Se va a crear lo que seria una tabla de creacion de banner o billboard de tienda
+//Aqui como regla de negocio se establece que el billboard solo existe en relacion a una tienda
+//por lo que se le pasara el PK de la entidad tienda como FK.
+
+model Billboard{
+  id          String    @id @default(uuid())  //Se indica la llave primaria
+  storeId     String    //Aqui se indica la FK de la entidad Store
+  store       Store     @relation("StoreToBillboard", fields:[storeId], references:[id]) //Relacion con la FK
+  label       String  
+  imageUrl    String
+  categories  Category[] //Valor de tipo array porque se van a pasar varios objetos de la clase categoria.
+  createdAt   DateTime  @default(now()) //Aqui estamos indicando que el valor de creacion de instancia es inmediato en la configuracion de tiempo del sistema
+  updatedAt   DateTime  @updatedAt
+
+  @@index([storeId]) //Esto se agrego para resolver un error en la linea 36.
+}
+
+//Se va a crear lo que seria una tabla de categoria 
+model Category{
+  id          String    @id @default(uuid())  //Se indica la llave primaria
+  storeId     String
+  store       Store      @relation("StoreToCategory", fields:[storeId], references: [id]) //Relacion con la FK
+  billboardId String
+  products    Product[]  @relation("CategoryToProduct")  //Valor de tipo array porque se van a pasar varios objetos de la clase producto.
+  billboard   Billboard  @relation(fields:[billboardId], references: [id] ) //Relacion con la FK
+  name        String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([storeId])
+  @@index([billboardId])
+}
+
+//Se va a crear lo que seria una tabla de tamanno de los items 
+model Size{
+  id          String    @id @default(uuid())
+  storeId     String
+  store Store @relation("StoreToSize", fields: [storeId], references:[id]) //Relacion con la FK
+  name        String
+  value       String
+  products    Product[] //Valor de tipo array porque se van a pasar varios objetos de la clase producto.
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([storeId])
+}
+
+//Se va a crear lo que seria una tabla de colores de los items 
+model Color{
+  id          String    @id @default(uuid())  //Se indica la llave primaria
+  storeId     String
+  store Store @relation("StoreToColor", fields: [storeId], references:[id]) //Relacion con la FK
+  name        String
+  value       String
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([storeId])
+}
+
+//Se va a crear lo que seria una tabla de productos
+model Product {
+  id          String    @id @default(uuid())  //Se indica la llave primaria 
+  storeId     String
+  store       Store     @relation("StoreToProduct", fields:[storeId], references: [id]) //Relacion con la FK
+  categoryId  String
+  category    Category  @relation("CategoryToProduct", fields:[categoryId],  references:[id])
+  name        String
+  price       Decimal   
+  isFeatured  Boolean   @default(false)
+  isArchived   Boolean   @default(false)
+  sizeId      String
+  size        Size      @relation(fields: [sizeId],  references:[id])
+  colorId     String
+  color       Color     @relation(fields: [colorId], references:[id])
+  images      Image[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([storeId])
+  @@index([categoryId])
+  @@index([sizeId])
+  @@index([colorId])
+
+} 
+
+//Se va a crear lo que seria una tabla de imagenes
+model Image{
+  id          String    @id @default(uuid())  //Se indica la llave primaria 
+  productId   String    
+  //Aqui se utiliza el Cascade para poder borrar el producto aun si hay una imagen asociada
+  product     Product   @relation(fields: [productId],  references: [id], onDelete: Cascade)
+  url         String    
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([productId])
 }
