@@ -127,7 +127,7 @@ model Image{
   id          String    @id @default(uuid())  //Se indica la llave primaria 
   productId   String    
   //Aqui se utiliza el Cascade para poder borrar el producto aun si hay una imagen asociada
-  product     Product   @relation(fields: [productId],  references: [id])
+  product     Product   @relation(fields: [productId],  references: [id], onDelete: Cascade)
   url         String    
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
